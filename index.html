@@ -20,7 +20,79 @@
     --sans: 'Syne', sans-serif;
   }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  /* LOADER */
+  #loader {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2.2rem;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+  }
+  #loader.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .loader-logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: 0.08em;
+  }
+  .loader-logo span { color: var(--red); }
+  .loader-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    width: min(220px, 70vw);
+  }
+  .loader-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 0.5rem;
+  }
+  .loader-bar-wrap {
+    width: 100%;
+    height: 1px;
+    background: rgba(255,255,255,0.07);
+    position: relative;
+    overflow: hidden;
+  }
+  .loader-bar {
+    position: absolute;
+    left: 0; top: 0;
+    height: 100%;
+    width: 0%;
+    background: var(--red);
+    transition: width 0.12s ease;
+    box-shadow: 0 0 10px var(--red-glow);
+  }
+  .loader-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    min-height: 1em;
+    margin-top: -1rem;
+  }
+  .loader-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--red);
+    letter-spacing: 0.1em;
+    margin-top: -1.4rem;
+  }
+
+
 
   html { scroll-behavior: smooth; }
 
@@ -30,6 +102,13 @@
     font-family: var(--sans);
     overflow-x: hidden;
     cursor: none;
+  }
+
+  @media (hover: none) and (pointer: coarse) {
+    body { cursor: auto; }
+    #cursor, #cursor-ring { display: none !important; }
+    a, button, .service-card { cursor: pointer; }
+    .btn-primary, .btn-ghost, .contact-link, nav a { cursor: pointer; }
   }
 
   /* CURSOR */
@@ -218,8 +297,10 @@
   .hero-scroll {
     position: absolute;
     bottom: 2.5rem;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    width: fit-content;
     font-family: var(--mono);
     font-size: 0.6rem;
     color: var(--muted);
@@ -231,6 +312,7 @@
     gap: 0.6rem;
     opacity: 0;
     animation: fadeUp 0.7s ease 1.2s forwards;
+    white-space: nowrap;
   }
   .scroll-line {
     width: 1px;
@@ -507,6 +589,51 @@
     transform: none;
   }
 
+  /* REVIEWS CAROUSEL */
+  .reviews-track-wrap {
+    overflow: hidden;
+    width: 100%;
+    position: relative;
+    mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+  }
+  .reviews-track {
+    display: flex;
+    gap: 1.2rem;
+    width: max-content;
+    will-change: transform;
+  }
+  .review-card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    padding: 1.4rem 1.6rem;
+    min-width: 240px;
+    max-width: 240px;
+    flex-shrink: 0;
+    transition: border-color .2s;
+  }
+  .review-card:hover { border-color: var(--red-glow); }
+  .review-stars {
+    color: #f5a623;
+    font-size: 0.9rem;
+    margin-bottom: 0.7rem;
+    letter-spacing: 0.05em;
+  }
+  .review-text {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: #999;
+    line-height: 1.65;
+    margin-bottom: 0.8rem;
+  }
+  .review-author {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    color: var(--red);
+    letter-spacing: 0.08em;
+  }
+  .contact-link--whatsapp:hover { color: #25D366 !important; border-color: #25D366 !important; }
+
   @media (max-width: 768px) {
     nav { padding: 1.2rem 1.5rem; }
     nav ul { display: none; }
@@ -517,10 +644,23 @@
     #stats-row { grid-template-columns: 1fr; padding: 2rem 1.5rem; }
     footer { flex-direction: column; gap: 0.5rem; text-align: center; }
     .hero-btns { flex-direction: column; align-items: center; }
+    #reviews { padding-left: 0; padding-right: 0; }
   }
 </style>
 </head>
 <body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-logo"><span>//</span> Carl1nzx</div>
+  <div class="loader-inner">
+    <div class="loader-meta">
+      <div class="loader-status" id="loader-status">iniciando...</div>
+      <div class="loader-pct" id="loader-pct">0%</div>
+    </div>
+    <div class="loader-bar-wrap"><div class="loader-bar" id="loader-bar"></div></div>
+  </div>
+</div>
 
 <canvas id="bg-canvas"></canvas>
 
@@ -542,13 +682,13 @@
   <div class="hero-bg-line"></div>
   <p class="hero-tag">// portfólio pessoal</p>
   <h1 class="hero-name">CARL<span class="red">1</span>NZX</h1>
-  <p class="hero-sub">Sites, servidores Discord e soluções de TI.<br>Transformando ideias em código.</p>
+  <p class="hero-sub">Ajudo pequenos negócios a crescer online com sites profissionais e conteúdo visual feito com IA. Soluções rápidas, diretas e focadas em resultado.</p>
   <div class="hero-btns">
-    <a href="#services" class="btn-primary">Ver serviços</a>
+    <a href="https://wa.me/5524992700119" target="_blank" class="btn-primary">Falar no WhatsApp</a>
     <a href="https://github.com/Carl1tosBR" target="_blank" class="btn-ghost">GitHub ↗</a>
   </div>
   <div class="hero-scroll">
-    <span>scroll</span>
+    <span>Saiba mais</span>
     <div class="scroll-line"></div>
   </div>
 </div>
@@ -574,28 +714,28 @@
   <p class="section-label reveal">01 — O que eu faço</p>
   <h2 class="section-title reveal">Serviços</h2>
   <div class="services-grid reveal">
-    <a href="https://discord.com/users/carl1nzx" target="_blank" class="service-card">
+    <a href="https://wa.me/5524992700119" target="_blank" class="service-card">
       <span class="service-icon">🌐</span>
-      <p class="service-name">Desenvolvimento Web</p>
-      <p class="service-desc">Sites modernos, rápidos e responsivos. Do design ao deploy, entrego páginas que impressionam.</p>
+      <p class="service-name">Criação de Sites</p>
+      <p class="service-desc">Landing pages e sites rápidos, modernos e prontos para atrair clientes e gerar resultados.</p>
       <span class="service-arrow">→</span>
     </a>
-    <a href="https://discord.com/users/carl1nzx" target="_blank" class="service-card">
+    <a href="https://wa.me/5524992700119" target="_blank" class="service-card">
       <span class="service-icon">🤖</span>
       <p class="service-name">Servidores Discord</p>
-      <p class="service-desc">Configuração completa de bots, cargos, canais, automações e sistemas personalizados.</p>
+      <p class="service-desc">Configuração completa com bots, cargos, automações e estrutura profissional.</p>
       <span class="service-arrow">→</span>
     </a>
-    <a href="https://discord.com/users/carl1nzx" target="_blank" class="service-card">
+    <a href="https://wa.me/5524992700119" target="_blank" class="service-card">
       <span class="service-icon">⚙️</span>
-      <p class="service-name">Soluções de TI</p>
-      <p class="service-desc">Scripts, automações, suporte técnico e outras demandas na área da informática e tecnologia.</p>
+      <p class="service-name">Otimização de PC</p>
+      <p class="service-desc">Deixo seu computador rápido, limpo e pronto para uso.</p>
       <span class="service-arrow">→</span>
     </a>
-    <a href="https://discord.com/users/carl1nzx" target="_blank" class="service-card">
+    <a href="https://wa.me/5524992700119" target="_blank" class="service-card">
       <span class="service-icon">🎨</span>
-      <p class="service-name">Pôsteres & Publicações</p>
-      <p class="service-desc">Criação de pôsteres e publicações com IA. Arte visual sob medida para o seu projeto.</p>
+      <p class="service-name">Posts com IA</p>
+      <p class="service-desc">Criação de artes e posts para Instagram que ajudam negócios a chamar atenção e vender mais.</p>
       <span class="service-arrow">→</span>
     </a>
     <div class="service-card service-card--soon">
@@ -617,7 +757,7 @@
     <p class="section-label reveal">02 — Sobre mim</p>
     <h2 class="section-title reveal">Quem<br>sou eu</h2>
     <div class="reveal">
-      <p>Sou o <strong>Carl1nzx</strong>, dev e entusiasta de tecnologia focado em criar soluções funcionais e visualmente marcantes. Atuo em <strong>desenvolvimento web</strong>, <strong>configuração de servidores Discord</strong> e diversas outras demandas da área de TI. Curso <strong>Engenharia de Software</strong> na <a href="https://univassouras.edu.br/" target="_blank" style="color:var(--red);text-decoration:none;border-bottom:1px solid var(--red-glow);">Universidade de Vassouras</a>.</p>
+      <p>Sou o <strong>Carl1nzx</strong>, desenvolvedor focado em criar soluções simples e eficientes para quem quer crescer online. Trabalho com <strong>sites</strong>, <strong>conteúdo com IA</strong> e organização digital, ajudando pessoas e negócios a terem presença profissional na internet.</p>
       
     </div>
     <div class="tech-list reveal">
@@ -634,6 +774,56 @@
   </div>
 </section>
 
+<!-- REVIEWS CAROUSEL -->
+<section id="reviews" style="padding-bottom:0; padding-top:5rem;">
+  <p class="section-label reveal" style="margin-bottom:2.5rem;">⭐ — Avaliações de clientes</p>
+  <div class="reviews-track-wrap">
+    <div class="reviews-track">
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Ótimo serviço, meu servidor ficou top! Super recomendo."</p>
+        <span class="review-author">— Lucas M.</span>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Site ficou incrível, exatamente o que eu queria. Entrega rápida!"</p>
+        <span class="review-author">— Ana C.</span>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★⯨</div>
+        <p class="review-text">"Muito profissional, bot configurado perfeitamente. Voltarei sempre."</p>
+        <span class="review-author">— Rafael S.</span>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Posts ficaram lindos, meu Instagram decolou depois da arte!"</p>
+        <span class="review-author">— Mariana T.</span>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"PC voando! Limpeza feita com cuidado e explicando tudo."</p>
+        <span class="review-author">— João P.</span>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★⯨</div>
+        <p class="review-text">"Landing page entregue antes do prazo. Cliente satisfeito!"</p>
+        <span class="review-author">— Camila R.</span>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Servidor do zero, ficou melhor do que eu imaginava. Top!"</p>
+        <span class="review-author">— Pedro H.</span>
+      </div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-text">"Conteúdo com IA absurdo, parece feito por agência grande."</p>
+        <span class="review-author">— Fernanda L.</span>
+      </div>
+      <!-- Duplicated for seamless loop -->
+    </div>
+  </div>
+</section>
+
 <!-- CONTACT -->
 <section id="contact">
   <p class="section-label reveal">03 — Vamos conversar</p>
@@ -642,8 +832,8 @@
     <a href="mailto:carloskskss@gmail.com" class="contact-link">
       <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
     </a>
-    <a href="https://discord.com/users/carl1nzx" target="_blank" class="contact-link">
-      <svg viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+    <a href="https://wa.me/5524992700119" target="_blank" class="contact-link contact-link--whatsapp">
+      <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
     </a>
   </div>
 </section>
@@ -655,6 +845,42 @@
 </footer>
 
 <script>
+  // FAKE LOADER
+  (function() {
+    const loader = document.getElementById('loader');
+    const bar = document.getElementById('loader-bar');
+    const statusEl = document.getElementById('loader-status');
+    const pctEl = document.getElementById('loader-pct');
+
+    const steps = [
+      { pct: 12,  label: 'iniciando...' },
+      { pct: 28,  label: 'carregando assets...' },
+      { pct: 47,  label: 'configurando ambiente...' },
+      { pct: 63,  label: 'renderizando layout...' },
+      { pct: 79,  label: 'aplicando estilos...' },
+      { pct: 91,  label: 'finalizando...' },
+      { pct: 100, label: 'pronto.' },
+    ];
+
+    const delays = [120, 280, 420, 380, 340, 450, 300];
+    let i = 0;
+
+    function next() {
+      if (i >= steps.length) {
+        setTimeout(() => loader.classList.add('hidden'), 320);
+        return;
+      }
+      const s = steps[i];
+      bar.style.width = s.pct + '%';
+      statusEl.textContent = s.label;
+      pctEl.textContent = s.pct + '%';
+      i++;
+      setTimeout(next, delays[i - 1] + Math.random() * 80);
+    }
+
+    setTimeout(next, 180);
+  })();
+
   // ANIMATED RED BACKGROUND
   const canvas = document.getElementById('bg-canvas');
   const ctx = canvas.getContext('2d');
@@ -705,22 +931,72 @@
   }
   drawBg();
 
-  // Cursor
+  // Cursor (desktop only)
+  const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
   const cursor = document.getElementById('cursor');
   const ring = document.getElementById('cursor-ring');
-  let mx = 0, my = 0, rx = 0, ry = 0;
-  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
-  function animCursor() {
-    cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
-    rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
-    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
-    requestAnimationFrame(animCursor);
+  if (!isTouchDevice) {
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+    function animCursor() {
+      cursor.style.left = mx + 'px'; cursor.style.top = my + 'px';
+      rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+      ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+      requestAnimationFrame(animCursor);
+    }
+    animCursor();
+    document.querySelectorAll('a, button, .service-card').forEach(el => {
+      el.addEventListener('mouseenter', () => { ring.style.width = '56px'; ring.style.height = '56px'; ring.style.opacity = '0.9'; });
+      el.addEventListener('mouseleave', () => { ring.style.width = '36px'; ring.style.height = '36px'; ring.style.opacity = '0.6'; });
+    });
   }
-  animCursor();
-  document.querySelectorAll('a, button, .service-card').forEach(el => {
-    el.addEventListener('mouseenter', () => { ring.style.width = '56px'; ring.style.height = '56px'; ring.style.opacity = '0.9'; });
-    el.addEventListener('mouseleave', () => { ring.style.width = '36px'; ring.style.height = '36px'; ring.style.opacity = '0.6'; });
-  });
+
+  // INFINITE CAROUSEL
+  (function() {
+    const track = document.querySelector('.reviews-track');
+    if (!track) return;
+    // Clone all cards and append for seamless loop
+    const origCards = Array.from(track.children).filter(el => el.classList.contains('review-card'));
+    origCards.forEach(card => track.appendChild(card.cloneNode(true)));
+
+    const GAP = 19.2; // 1.2rem in px approx, recalculated below
+    let offset = 0;
+    let paused = false;
+    let speed = 0.6; // px per frame
+
+    function getHalfWidth() {
+      // Width of original set (half the track)
+      const cards = track.querySelectorAll('.review-card');
+      const total = cards.length;
+      const half = total / 2;
+      let w = 0;
+      for (let i = 0; i < half; i++) {
+        w += cards[i].offsetWidth;
+      }
+      // Add gaps
+      const gap = parseFloat(getComputedStyle(track).gap) || 19.2;
+      w += gap * (half - 1);
+      return w + gap; // include trailing gap for seamless feel
+    }
+
+    let halfWidth = 0;
+    function init() { halfWidth = getHalfWidth(); }
+    init();
+    window.addEventListener('resize', init);
+
+    track.addEventListener('mouseenter', () => paused = true);
+    track.addEventListener('mouseleave', () => paused = false);
+
+    function animate() {
+      if (!paused) {
+        offset += speed;
+        if (offset >= halfWidth) offset -= halfWidth;
+        track.style.transform = `translateX(-${offset}px)`;
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+  })();
 
   // Scroll reveal
   const reveals = document.querySelectorAll('.reveal');
